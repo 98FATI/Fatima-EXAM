@@ -1,4 +1,4 @@
-namespace BookApi.Models;
+namespace BookBlazor.Models;
 
 public class Book
 {

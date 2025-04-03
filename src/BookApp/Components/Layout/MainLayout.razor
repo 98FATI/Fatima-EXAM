@@ -21,3 +21,17 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+<button @onclick="ToggleTheme" style="position: absolute; top: 1rem; right: 1rem;">🌙/☀</button>
+
+@code {
+    private bool dark = false;
+
+    void ToggleTheme()
+    {
+        dark = !dark;
+        var theme = dark ? "dark-mode" : "";
+        _ = JS.InvokeVoidAsync("setTheme", theme);
+    }
+
+    [Inject] IJSRuntime JS { get; set; } = default!;
+}

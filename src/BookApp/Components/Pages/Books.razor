@@ -1,12 +1,12 @@
 @page "/books"
 @inject HttpClient Http
-@using BookApp.Models
+@using BookBlazor.Models
 
-<h3>Ma bibliothèque 📚</h3>
+<h3>📚 Liste des Livres</h3>
 
-@if (books is null)
+@if (books == null)
 {
-    <p><em>Chargement en cours...</em></p>
+    <p>Chargement...</p>
 }
 else
 {
@@ -14,51 +14,65 @@ else
         @foreach (var book in books)
         {
             <li>
-                @* <strong>@book.Title</strong> par @book.Author
-                @if (book.IsRead)
-                {
-                    <span style="color: green;"> (lu)</span>
-                }
-                else
-                {
-                    <button class="btn btn-sm btn-primary" @onclick="() => MarkAsRead(book.Id)">Marquer comme lu</button>
-                } *@
+                <strong>@book.Title</strong> par @book.Author
+                <button @onclick="() => EditBook(book)">✏</button>
+                <button @onclick="() => DeleteBook(book.Id)">❌</button>
             </li>
         }
     </ul>
 }
 
-<hr />
+<h4>@(editing ? "✏ Modifier le livre" : "➕ Ajouter un livre")</h4>
 
-<h4>Ajouter un livre</h4>
-@* <EditForm Model="newBook"
-          OnValidSubmit="AddBook">
-    <InputText @bind-Value="newBook.Title" placeholder="Titre" class="form-control mb-2" />
-    <InputText @bind-Value="newBook.Author" placeholder="Auteur" class="form-control mb-2" />
-    <button type="submit" class="btn btn-success">Ajouter</button>
-</EditForm> *@
+<input placeholder="Titre" @bind="newBook.Title" />
+<input placeholder="Auteur" @bind="newBook.Author" />
+<button @onclick="SaveBook">@((editing ? "Mettre à jour" : "Ajouter"))</button>
 
 @code {
-    private List<Book>? books;
-    private Book newBook = new();
+    List<Book>? books;
+    Book newBook = new();
+    bool editing = false;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadBooks();
     }
 
-    private async Task LoadBooks()
+    async Task LoadBooks()
     {
-        throw new NotImplementedException("LoadBooks method is not implemented yet.");
+        books = await Http.GetFromJsonAsync<List<Book>>("books");
     }
 
-    private async Task AddBook()
+    async Task SaveBook()
     {
-        throw new NotImplementedException("AddBook method is not implemented yet.");
+        if (editing)
+        {
+            await Http.PutAsJsonAsync($"books/{newBook.Id}", newBook);
+            editing = false;
+        }
+        else
+        {
+            await Http.PostAsJsonAsync("books", newBook);
+        }
+
+        newBook = new Book();
+        await LoadBooks();
     }
 
-    private async Task MarkAsRead(int id)
+    void EditBook(Book book)
     {
-        throw new NotImplementedException("MarkAsRead method is not implemented yet.");
+        newBook = new Book
+        {
+            Id = book.Id,
+            Title = book.Title,
+            Author = book.Author
+        };
+        editing = true;
+    }
+
+    async Task DeleteBook(int id)
+    {
+        await Http.DeleteAsync($"books/{id}");
+        await LoadBooks();
     }
 }
